@@ -15,7 +15,8 @@ export default function Resume() {
 
     // **关键修改：检查 printWindow 是否为 null**
     if (printWindow) {
-      const currentContent = document.documentElement.outerHTML;
+      // 获取需要打印的内容的 outerHTML，并处理可能为 null 的情况
+      const resumeContent = document.querySelector('.max-w-4xl')?.outerHTML || '';
 
       printWindow.document.write(`
         <!DOCTYPE html>
@@ -34,7 +35,7 @@ export default function Resume() {
             </style>
           </head>
           <body>
-            ${document.querySelector('.max-w-4xl')?.outerHTML || ''}
+            ${resumeContent}
           </body>
         </html>
       `);
@@ -57,8 +58,12 @@ export default function Resume() {
       const jsPDF = await import('jspdf').then(m => m.default);
       const html2canvas = await import('html2canvas').then(m => m.default);
 
-      const element = document.querySelector('.max-w-4xl');
-      if (!element) return;
+      // **关键修改：使用类型断言将 Element 转换为 HTMLElement**
+      const element = document.querySelector('.max-w-4xl') as HTMLElement;
+      if (!element) {
+          console.error("无法找到要转换为PDF的元素 (.max-w-4xl)");
+          return;
+      }
 
       // 生成canvas
       const canvas = await html2canvas(element, {
@@ -93,6 +98,7 @@ export default function Resume() {
       pdf.save(`${personalInfo.name}-简历.pdf`);
     } catch (error) {
       console.log('高级PDF功能未可用，使用浏览器打印功能');
+      console.error('高级PDF功能错误:', error); // 打印详细错误信息
       downloadPDF();
     }
   };
