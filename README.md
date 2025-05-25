@@ -2,6 +2,10 @@
 
 一个现代化的响应式简历模板，使用 Next.js 和 Tailwind CSS 构建，支持 PDF 导出功能。
 
+## 项目预览
+
+![博客主页布局截图](https://imgur.com/TWKIaBp)
+
 ## ✨ 特性
 
 - 🎨 现代化设计，支持深色渐变主题
