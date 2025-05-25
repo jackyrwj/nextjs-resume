@@ -12,35 +12,42 @@ export default function Resume() {
   const exportPDF = () => {
     // 创建一个新窗口用于打印
     const printWindow = window.open('', '_blank');
-    const currentContent = document.documentElement.outerHTML;
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${personalInfo.name} - 简历</title>
-          <script src="https://cdn.tailwindcss.com"></script>
-          <style>
-            @media print {
-              body { margin: 0; }
-              .no-print { display: none !important; }
-              .print-break { page-break-before: always; }
-              .shadow-2xl { box-shadow: none !important; }
-              .bg-gradient-to-br { background: white !important; }
-            }
-          </style>
-        </head>
-        <body>
-          ${document.querySelector('.max-w-4xl').outerHTML}
-        </body>
-      </html>
-    `);
+    // **关键修改：检查 printWindow 是否为 null**
+    if (printWindow) {
+      const currentContent = document.documentElement.outerHTML;
 
-    printWindow.document.close();
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 500);
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>${personalInfo.name} - 简历</title>
+            <script src="https://cdn.tailwindcss.com"></script>
+            <style>
+              @media print {
+                body { margin: 0; }
+                .no-print { display: none !important; }
+                .print-break { page-break-before: always; }
+                .shadow-2xl { box-shadow: none !important; }
+                .bg-gradient-to-br { background: white !important; }
+              }
+            </style>
+          </head>
+          <body>
+            ${document.querySelector('.max-w-4xl')?.outerHTML || ''}
+          </body>
+        </html>
+      `);
+
+      printWindow.document.close();
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
+    } else {
+      // 提示用户可能被阻止了弹窗
+      alert('无法打开打印窗口，请检查浏览器设置是否阻止了弹出窗口。');
+    }
   };
 
   // 高级PDF下载功能（如果安装了jspdf和html2canvas）
