@@ -4,7 +4,7 @@
 
 ## 项目预览
 
-![博客主页布局截图](https://imgur.com/TWKIaBp)
+![博客主页布局截图](https://i.imgur.com/TWKIaBp.png)
 
 ## ✨ 特性
 
