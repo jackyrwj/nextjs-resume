@@ -1,3 +1,154 @@
+## Supabase 设置
+
+在本地创建 `.env.local` 并填入：
+
+```
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+NEXT_PUBLIC_TEST_USER_ID=your-test-user-uuid
+```
+
+注意：服务密钥仅在服务器端使用，已避免在客户端暴露。
+
+### 数据表
+
+在 Supabase SQL 运行：
+
+```
+create table if not exists resumes (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz default now(),
+  data jsonb not null
+);
+```
+
+### 归一化表结构（按项分别保存）
+
+如果你希望每一项单独存储，使用以下结构（推荐）：
+
+```
+-- 主表：简历与个人信息
+create table if not exists resumes_detailed (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz default now(),
+  name text not null,
+  title text,
+  email text,
+  phone text,
+  location text,
+  website text,
+  github text,
+  linkedin text
+);
+
+-- 工作经历
+create table if not exists experiences (
+  id uuid primary key default gen_random_uuid(),
+  resume_id uuid not null references resumes_detailed(id) on delete cascade,
+  company text not null,
+  position text not null,
+  period text,
+  order_index int default 0
+);
+
+-- 工作经历的描述条目
+create table if not exists experience_bullets (
+  id uuid primary key default gen_random_uuid(),
+  experience_id uuid not null references experiences(id) on delete cascade,
+  content text not null,
+  order_index int default 0
+);
+
+-- 教育经历
+create table if not exists educations (
+  id uuid primary key default gen_random_uuid(),
+  resume_id uuid not null references resumes_detailed(id) on delete cascade,
+  school text not null,
+  degree text,
+  period text,
+  gpa text,
+  order_index int default 0
+);
+
+-- 项目经历
+create table if not exists projects (
+  id uuid primary key default gen_random_uuid(),
+  resume_id uuid not null references resumes_detailed(id) on delete cascade,
+  name text not null,
+  tech text,
+  period text,
+  description text,
+  order_index int default 0
+);
+
+-- 技能（带分类）
+create type skill_category as enum ('frontend', 'tools', 'backend', 'other');
+create table if not exists skills (
+  id uuid primary key default gen_random_uuid(),
+  resume_id uuid not null references resumes_detailed(id) on delete cascade,
+  category skill_category not null,
+  name text not null,
+  order_index int default 0
+);
+```
+
+注意：首次执行若 `skill_category` 已存在会报错，可先 `drop type skill_category` 再创建，或手动改为 `text` 列。
+
+### 单用户单行结构（每个字段一列，推荐）
+
+适合“一个用户一条记录”的场景：
+
+```
+-- 用户简历（每个用户一行）
+create table if not exists user_resume (
+  user_id uuid primary key,
+  updated_at timestamptz default now(),
+
+  -- 个人信息字段
+  name text not null,
+  title text,
+  email text,
+  phone text,
+  location text,
+  website text,
+  github text,
+  linkedin text,
+
+  -- 工作经历（可根据需求增加更多列或改用 JSON）
+  exp1_company text, exp1_position text, exp1_period text, exp1_desc text,
+  exp2_company text, exp2_position text, exp2_period text, exp2_desc text,
+
+  -- 教育经历
+  edu1_school text, edu1_degree text, edu1_period text, edu1_gpa text,
+
+  -- 项目经历
+  proj1_name text, proj1_tech text, proj1_period text, proj1_desc text,
+
+  -- 技能（可简化为逗号分隔或 JSON）
+  skills_frontend text,
+  skills_tools text,
+  skills_backend text,
+  skills_other text
+);
+
+-- 开启 RLS，并限制为“本人可读写”
+alter table user_resume enable row level security;
+create policy "owner can select" on user_resume for select using (auth.uid() = user_id);
+create policy "owner can upsert" on user_resume for
+  insert with check (auth.uid() = user_id),
+  update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+```
+
+说明：
+- 简化起见示例仅放了 2 段经历、1 段教育、1 个项目；你可以按需要扩展列或将这些部分改用 JSON 列（如 `exp jsonb`、`projects jsonb`）仍保持“单行”。
+- 该结构依赖 Supabase Auth（`auth.uid()`）；若暂不启用登录，可先用服务端 Service Role 写入，后续再启用 RLS 和策略。
+
+### 使用
+
+开发环境启动后：
+- 点击“保存到数据库”按钮，将按归一化结构写入多张表（`resumes_detailed` 及其子表）。
+- 如需写入整份 JSON，可改用接口 `/api/save-resume`（保留兼容）。
+
 # Next.js 简历模板
 
 一个现代化的响应式简历模板，使用 Next.js 和 Tailwind CSS 构建，支持 PDF 导出功能。
