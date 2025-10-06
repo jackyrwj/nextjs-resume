@@ -319,6 +319,26 @@ export default function Resume() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-8 px-4">
+      {/* 右上角操作按钮 */}
+      <div className="fixed top-4 right-4 z-50 no-print">
+        <div className="flex gap-2">
+          <button
+            onClick={() => setEditMode((v) => !v)}
+            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg shadow-lg transition-colors duration-200"
+            title="编辑模式"
+          >
+            {editMode ? "完成编辑" : "编辑"}
+          </button>
+          <button
+            onClick={saveToDatabase}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg shadow-lg transition-colors duration-200"
+            title="保存到数据库"
+          >
+            保存到数据库
+          </button>
+        </div>
+      </div>
+
       <div className="max-w-4xl mx-auto bg-white shadow-2xl rounded-2xl overflow-hidden print:shadow-none print:rounded-none resume-sheet">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-8">
